@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block content %}
+  <h3>{{name}}</h3>
+
+<form action="/processform" method="POST">
+  <input name="l">
+  <input name="b">
+  <input name="d">
+  <input type=submit value=Submit>
+</form>
+
+  <h3>DM={{dm}}</h3>
+{% endblock %}
