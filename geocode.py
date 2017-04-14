@@ -4,6 +4,9 @@ import json
 import urllib
 import urllib2
 
+if address == "":
+    address = "Green Bank Telescope"
+
 api_key = os.getenv("MAPS_API_KEY")
 if api_key == "":
     sys.exit("Please obtain an API key from https://developers.google.com/maps/documentation/geocoding/start#get-a-key and set the environment variable MAPS_API_KEY")
@@ -11,7 +14,7 @@ if api_key == "":
 #print api_key
 
 url = 'https://maps.googleapis.com/maps/api/geocode/json?'
-values = {'address' : 'Campbell Hall',
+values = {'address' : address,
           'key' : api_key }
 
 data = urllib.urlencode(values)
