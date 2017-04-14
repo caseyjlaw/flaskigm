@@ -11,11 +11,12 @@ if api_key == "":
 #print api_key
 
 url = 'https://maps.googleapis.com/maps/api/geocode/json?'
-values = {'address' : 'Green Bank Telescope',
+values = {'address' : 'Campbell Hall',
           'key' : api_key }
 
 data = urllib.urlencode(values)
-full_url = url + '?' + data
+full_url = url + data
+print full_url
 response = urllib2.urlopen(full_url)
 json_response = response.read()
 
