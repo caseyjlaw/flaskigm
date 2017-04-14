@@ -1,16 +1,26 @@
-<table>
-<tr>
-  <td>Pulsar</td>
-  <td>RA</td>
-  <td>Dec.</td>
-  <td>Rise/Set LST</td>
-</tr>
-{% for i in range(n) %}
-<tr>
-  <td>{{ names[i] }}</td>
-  <td>{{ rajd[i] }}</td>
-  <td>{{ decjd[i] }}</td>
-  <td>{{ risesetlst[i] }}</td>
-</tr>
-{% endfor %}
-</table>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+  </head>
+  <body>
+    <table>
+    <tr class="heading">
+      <td>Pulsar</td>
+      <td>RA</td>
+      <td>Dec.</td>
+      <td>Rise/Set LST</td>
+    </tr>
+    {% for i in range(n) %}
+    <tr>
+      <td>{{ names[i] }}</td>
+      <td>{{ rajd[i] }}</td>
+      <td>{{ decjd[i] }}</td>
+      <td>{{ risesetlst[i] }}</td>
+    </tr>
+    {% endfor %}
+    </table>
+  </body>
+</html>
