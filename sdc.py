@@ -37,23 +37,63 @@ def obs(ra,de):
     altz = alts.deg - ellim
     riseset = delta_midnight[sp.where(altz[:-1] * altz[1:] < 0)]
     return str(riseset)
+from math import ceil
 
-@app.route("/pulsars/riseset")
-def showpulsars():
+
+class Pagination(object):
+
+    def __init__(self, page, per_page, total_count):
+        self.page = page
+        self.per_page = per_page
+        self.total_count = total_count
+
+    @property
+    def pages(self):
+        return int(ceil(self.total_count / float(self.per_page)))
+
+    @property
+    def has_prev(self):
+        return self.page > 1
+
+    @property
+    def has_next(self):
+        return self.page < self.pages
+
+    def iter_pages(self, left_edge=2, left_current=2,
+                   right_current=5, right_edge=2):
+        last = 0
+        for num in xrange(1, self.pages + 1):
+            if num <= left_edge or \
+               (num > self.page - left_current - 1 and \
+                num < self.page + right_current) or \
+               num > self.pages - right_edge:
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
+
+PER_PAGE = 10
+
+@app.route('/pulsars/riseset/', defaults={'page': 1})
+@app.route("/pulsars/riseset/page/<int:page>")
+def showpulsars(page):
     pulsar_names = []
     pulsar_rajd = []
     pulsar_decjd = []
     pulsar_risesetlst = []
-    with open("psrcat_small.csv", "r") as csvfile:
+    with open("psrcat.csv", "r") as csvfile:
         pulsars = csv.reader(csvfile, delimiter=",")
-        for pulsar in pulsars:
-            pulsar_names.append(pulsar[0])
-            pulsar_rajd.append(pulsar[1])
-            pulsar_decjd.append(pulsar[2])
+	p = list(pulsars)
+	count = len(p)
+	for i in range(page*PER_PAGE, (page + 1)*PER_PAGE):
+            pulsar_names.append(p[i][0])
+            pulsar_rajd.append(p[i][1])
+            pulsar_decjd.append(p[i][2])
             #pulsar_risesetlst.append("test")
-            pulsar_risesetlst.append(obs(pulsar[1], pulsar[2]))
+            pulsar_risesetlst.append(obs(p[i][1], p[i][2]))
         num_pulsars = len(pulsar_names)
-        return render_template("pulsars.html", n=num_pulsars, names=pulsar_names,
+	pagination = Pagination(page, PER_PAGE, count)
+        return render_template("pulsars.html", pagination=pagination, n=num_pulsars, names=pulsar_names,
                 rajd=pulsar_rajd, decjd=pulsar_decjd,
                 risesetlst=pulsar_risesetlst)
 
