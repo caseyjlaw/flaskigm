@@ -1,0 +1,16 @@
+<table>
+<tr>
+  <td>Pulsar</td>
+  <td>RA</td>
+  <td>Dec.</td>
+  <td>Rise/Set LST</td>
+</tr>
+{% for i in range(n) %}
+<tr>
+  <td>{{ names[i] }}</td>
+  <td>{{ rajd[i] }}</td>
+  <td>{{ decjd[i] }}</td>
+  <td>{{ risesetlst[i] }}</td>
+</tr>
+{% endfor %}
+</table>
