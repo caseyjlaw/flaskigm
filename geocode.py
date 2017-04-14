@@ -3,6 +3,13 @@ import sys
 import json
 import urllib
 import urllib2
+import argparse
+
+parser = argparse.ArgumentParser(description='GeoCoder')
+parser.add_argument('address',help='Address')
+args = parser.parse_args()
+
+address = args.address
 
 if address == "":
     address = "Green Bank Telescope"
@@ -19,7 +26,7 @@ values = {'address' : address,
 
 data = urllib.urlencode(values)
 full_url = url + data
-print full_url
+#print full_url
 response = urllib2.urlopen(full_url)
 json_response = response.read()
 
