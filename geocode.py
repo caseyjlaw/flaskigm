@@ -6,13 +6,10 @@ import urllib2
 import argparse
 
 parser = argparse.ArgumentParser(description='GeoCoder')
-parser.add_argument('address',help='Address')
+parser.add_argument('address',help='Address',default="Green Bank Telescope",nargs="?")
 args = parser.parse_args()
 
 address = args.address
-
-if address == "":
-    address = "Green Bank Telescope"
 
 api_key = os.getenv("MAPS_API_KEY")
 if api_key == "":
