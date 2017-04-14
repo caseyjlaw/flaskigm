@@ -22,5 +22,9 @@
     </tr>
     {% endfor %}
     </table>
+    <p><a href="/pulsars/riseset/page/1">First</a> |
+    <a href="/pulsars/riseset/page/{{ pagination.page - 1 }}">Prev</a> |
+    <a href="/pulsars/riseset/page/{{ pagination.page + 1 }}">Next</a> |
+       <a href="/pulsars/riseset/page/">Last</a></p>
   </body>
 </html>

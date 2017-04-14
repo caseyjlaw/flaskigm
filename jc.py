@@ -72,7 +72,7 @@ class Pagination(object):
 
 PER_PAGE = 20
 
-@app.route('/pulsars/riseset/', defaults={'page': 1})
+@app.route('/pulsars/riseset/', defaults={'page': 0})
 @app.route("/pulsars/riseset/page/<int:page>")
 def showpulsars(page):
     pulsar_names = []
@@ -87,8 +87,6 @@ def showpulsars(page):
             pulsar_names.append(p[i][0])
             pulsar_rajd.append(p[i][1])
             pulsar_decjd.append(p[i][2])
-            #pulsar_risesetlst.append("test")
-            #pulsar_risesetlst.append(obs(p[i][1], p[i][2]))
             pulsar_risesetlst.append(calc_rise_set(float(p[i][1]),
                 float(p[i][2]), 38.4,
                 -79.8, 85.0))
