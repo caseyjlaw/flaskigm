@@ -1,3 +1,6 @@
+from math import pi, sin, cos, acos, ceil, modf
+import warnings, os, sys, csv, json
+import urllib, urllib2
 from flask import Flask, render_template, request
 from astropy.coordinates import SkyCoord
 from astropy.utils.exceptions import AstropyWarning
@@ -5,13 +8,12 @@ from astropy import units as u
 from ne2001 import density
 from SM2017 import SM
 from astroquery.simbad import Simbad
-import warnings
 warnings.simplefilter('ignore', category=AstropyWarning)
 
 app = Flask(__name__)
 ed = density.ElectronDensity()
 simbad = Simbad()
-
+app.url_map.strict_slashes = False
 
 @app.route("/")
 def landing():
@@ -65,24 +67,24 @@ def coordlanding():
 #def ne2001(l, b, d):
 #    dm = ed.DM(l, b, d).value
 #    return render_template('ne2001.html', l=l, b=b, d=d, dm=dm)
-
-@app.route("/coord/name<string:name>")
-def coord(name):
-    tab = simbad.query_object(name)
-    if tab:
-        namecol = tab.colnames.index("MAIN_ID")
-        racol = tab.colnames.index("RA")
-        deccol = tab.colnames.index("DEC")
-        if len(tab) == 1:
-            retname = tab[0][namecol]
-            radec = '{0}, {1}'.format(tab[0][racol], tab[0][deccol])
-            return "{0} is at {1}".format(retname, radec)
-        else:
-            column = tab.columns[namecol]
-            retname = ', '.join([name for name in column])
-            return "Query {0} returns {1} names: {2}".format(name, len(tab), retname)
-    else:
-        return "Query {0} returns nothing.".format(name)
+#
+#@app.route("/coord/name<string:name>")
+#def coord(name):
+#    tab = simbad.query_object(name)
+#    if tab:
+#        namecol = tab.colnames.index("MAIN_ID")
+#        racol = tab.colnames.index("RA")
+#        deccol = tab.colnames.index("DEC")
+#        if len(tab) == 1:
+#            retname = tab[0][namecol]
+#            radec = '{0}, {1}'.format(tab[0][racol], tab[0][deccol])
+#            return "{0} is at {1}".format(retname, radec)
+#        else:
+#            column = tab.columns[namecol]
+#            retname = ', '.join([name for name in column])
+#            return "Query {0} returns {1} names: {2}".format(name, len(tab), retname)
+#    else:
+#        return "Query {0} returns nothing.".format(name)
 
 
 @app.route("/sm2017/l<int:l>b<int:b>")
@@ -127,18 +129,18 @@ class Pagination(object):
 
 PER_PAGE = 20
 
+
 @app.route('/obs/')
 def obslookup():
-    return render_template('obslookup.html')
+    return render_template('obslookup.html', name="Telescope name")
 
-@app.route('/geocode/')
+
+@app.route('/geocode', methods=["POST"])
 def geocode():
-    address = request.form.get("loc", "Arecibo")
+    address = request.form.get("loc")
     api_key = os.getenv("MAPS_API_KEY")
-    if api_key == "":
+    if not api_key:
         sys.exit("Please obtain an API key from https://developers.google.com/maps/documentation/geocoding/start#get-a-key and set the environment variable MAPS_API_KEY")
-
-    #print api_key
 
     url = 'https://maps.googleapis.com/maps/api/geocode/json?'
     values = {'address' : address,
@@ -146,24 +148,20 @@ def geocode():
 
     data = urllib.urlencode(values)
     full_url = url + data
-    #print full_url
     response = urllib2.urlopen(full_url)
     json_response = response.read()
 
     data_dict = json.loads(json_response)
 
-    #print data_dict
-
     lat = data_dict['results'][0]['geometry']['location']['lat']
     lng = data_dict['results'][0]['geometry']['location']['lng']
 
-    print lat, lng
-    return [lat, lng]
+    return showpulsars(lat, lng, 0)
 
 
-@app.route('/pulsars/riseset/lat<float:lat>lng<float:lng>/', defaults={'page': 0})
-@app.route("/pulsars/riseset/lat<float:lat>lng<float:lng>/page/<int:page>")
-def showpulsars(page):
+#@app.route('/pulsars/', defaults={'lat': 0, 'lng': 0, 'page': 0})
+@app.route("/pulsars") #/<float:lat>/<float:lng>/<int:page>")
+def showpulsars(lat, lng, page, methods=["GET", "POST"]):
     pulsar_names = []
     pulsar_rajd = []
     pulsar_decjd = []
@@ -181,8 +179,7 @@ def showpulsars(page):
         num_pulsars = len(pulsar_names)
 	pagination = Pagination(page, PER_PAGE, count)
         return render_template("pulsars.html", pagination=pagination, n=num_pulsars, names=pulsar_names,
-                rajd=pulsar_rajd, decjd=pulsar_decjd,
-                risesetlst=pulsar_risesetlst)
+                rajd=pulsar_rajd, decjd=pulsar_decjd, risesetlst=pulsar_risesetlst, lat=lat, lng=lng, name="Pulsars")
 
 def calc_rise_set(ra, dec, lat, lng, maxza):
     obsLat = lat                # latitude in degrees
@@ -227,6 +224,12 @@ def calc_rise_set(ra, dec, lat, lng, maxza):
         lstSetHour = lstSetHour - 24
     lstSetStr = str(lstSetHour).zfill(2) + ":" + str(lstSetMin).zfill(2)
     return [lstRiseStr, lstSetStr]
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('page_not_found.html'), 404
+
 
 if __name__ == "__main__":
     app.run()

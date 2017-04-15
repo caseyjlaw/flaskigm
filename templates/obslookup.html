@@ -1,4 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+
 <form action="/geocode" method="POST">
   <input name="loc">
   <input type=submit value=Submit>
 </form>
+
+{% endblock %}

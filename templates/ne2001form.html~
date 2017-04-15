@@ -2,7 +2,7 @@
 {% block content %}
   <h3>{{name}}</h3>
 
-<form action="/processform" method="POST">
+<form action="/processne2001" method="POST">
   <input name="l">
   <input name="b">
   <input name="d">

@@ -1,11 +1,8 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
-  </head>
-  <body>
+{% extends "layout.html" %}
+{% block content %}
+
+  <h3>{{name}}</h3>
+
     <table>
     <tr class="heading">
       <td>Pulsar</td>
@@ -22,9 +19,10 @@
     </tr>
     {% endfor %}
     </table>
-    <p><a href="/pulsars/riseset/page/1">First</a> |
-    <a href="/pulsars/riseset/page/{{ pagination.page - 1 }}">Prev</a> |
-    <a href="/pulsars/riseset/page/{{ pagination.page + 1 }}">Next</a> |
-    <a href="/pulsars/riseset/page/{{ pagination.pages - 1 }}">Last</a></p>
-  </body>
-</html>
+
+    <p><a href="/pulsars?lat={{ lat }}&lng={{ lng }}&p=1">First</a> |
+    <a href="/pulsars?lat={{ lat }}&lng={{ lng }}&p={{ pagination.page - 1 }}">Prev</a> |
+    <a href="/pulsars?lat={{ lat }}&lng={{ lng }}&p={{ pagination.page + 1 }}">Next</a> |
+    <a href="/pulsars?lat={{ lat }}&lng={{ lng }}&p={{ pagination.pages - 1 }}">Last</a></p>
+
+{% endblock %}
