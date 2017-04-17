@@ -1,0 +1,6 @@
+[submodule "SM2017"]
+	path = SM2017
+	url = git@github.com:caseyjlaw/SM2017.git
+[submodule "ne2001"]
+	path = ne2001
+	url = git@github.com:caseyjlaw/ne2001.git
