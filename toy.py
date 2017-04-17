@@ -6,23 +6,47 @@ from astropy.coordinates import SkyCoord
 from astropy.utils.exceptions import AstropyWarning
 from astropy import units as u
 from ne2001 import density
-from SM2017 import SM
+from SM2017 import SM2017
 from astroquery.simbad import Simbad
 warnings.simplefilter('ignore', category=AstropyWarning)
 
 app = Flask(__name__)
+app.url_map.strict_slashes = False
+
 ed = density.ElectronDensity()
 simbad = Simbad()
-app.url_map.strict_slashes = False
+
+smfitspath = '/'.join(SM2017.__file__.split('/')[:4]) + '/include'
+PER_PAGE = 20  # pulsars to list per page
 
 @app.route("/")
 def landing():
     return render_template('landing.html', name="name, ne2001, and sm2017 server")
 
 
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('page_not_found.html'), 404
+
+
+@app.route("/ne2001")
+def ne2001landing():
+    return render_template("ne2001form.html", name="Enter l, b, d for NE2001 calculation")
+
+
+@app.route("/coord")
+def coordlanding():
+    return render_template("coordform.html", name="Enter source name")
+
+
 @app.route("/sm2017")
-def landingsm2017():
-    return render_template('landing.html', name="sm2017 server: enter l, b")
+def sm2017landing():
+    return render_template("sm2017form.html", name="Enter RA, Dec, freq (MHz)")
+
+
+@app.route('/tel')
+def obslanding():
+    return render_template('telform.html', name="Enter telescope name to calculate rise/set times of pulsars")
 
 
 @app.route("/processne2001", methods=["POST"])
@@ -31,15 +55,11 @@ def getthree():
     b = float(request.form.get("b", "90."))
     d = float(request.form.get("d", "100"))
     dm = float(ed.DM(l, b, d).value)
-    return render_template("ne2001form.html", name="Enter l, b, d for NE2001 calculation", dm=dm)
+    return render_template("ne2001form.html", name="Enter l, b, d (deg, deg, kpc) for NE2001 calculation", dm=dm)
 #    return "DM={0} pc/cm3".format(dm)
 
-@app.route("/ne2001")
-def ne2001landing():
-    return render_template("ne2001form.html", name="Enter l, b, d for NE2001 calculation")
 
-
-@app.route("/processcoord", methods=["POST"])
+@app.route("/processname", methods=["POST"])
 def getone():
     name = request.form.get("name")
     tab = simbad.query_object(name)
@@ -58,81 +78,29 @@ def getone():
     return render_template("coordform.html", name="Not enough sources")
 
 
-@app.route("/coord")
-def coordlanding():
-    return render_template("coordform.html", name="Enter source name")
+@app.route("/processsm2017", methods=["POST"])
+def gettwo():
+    frame = 'fk5'
 
+    freq = request.form.get("freq")
+    freq = float(freq)*1e6 # freq in MHz
 
-#@app.route("/ne200l/l<int:l>b<int:b>d<int:d>")
-#def ne2001(l, b, d):
-#    dm = ed.DM(l, b, d).value
-#    return render_template('ne2001.html', l=l, b=b, d=d, dm=dm)
-#
-#@app.route("/coord/name<string:name>")
-#def coord(name):
-#    tab = simbad.query_object(name)
-#    if tab:
-#        namecol = tab.colnames.index("MAIN_ID")
-#        racol = tab.colnames.index("RA")
-#        deccol = tab.colnames.index("DEC")
-#        if len(tab) == 1:
-#            retname = tab[0][namecol]
-#            radec = '{0}, {1}'.format(tab[0][racol], tab[0][deccol])
-#            return "{0} is at {1}".format(retname, radec)
-#        else:
-#            column = tab.columns[namecol]
-#            retname = ', '.join([name for name in column])
-#            return "Query {0} returns {1} names: {2}".format(name, len(tab), retname)
-#    else:
-#        return "Query {0} returns nothing.".format(name)
+    ra = request.form.get("ra")
+    dec = request.form.get("dec")
 
+    if ':' in ra and ':' in dec:
+        pos = SkyCoord([ra], [dec], frame=frame, 
+                       unit = (u.hourangle, u.degree))
 
-@app.route("/sm2017/l<int:l>b<int:b>")
-def sm2017(l, b):
-    nu = 1.4e9
-    frame = 'galactic'
-    pos = SkyCoord([l]*u.degree, [b]*u.degree, frame=frame)
-    sm = SM('/Users/caseyjlaw/code/SM2017/data/Halpha_map.fits', nu=nu)
-    return "SM={0}".format(sm.get_halpha(pos))
+    else:
+        ra = float(ra)
+        dec = float(dec)
+        pos = SkyCoord([ra], [dec], frame=frame,
+                       unit = (u.degree, u.degree))
 
-class Pagination(object):
-
-    def __init__(self, page, per_page, total_count):
-        self.page = page
-        self.per_page = per_page
-        self.total_count = total_count
-
-    @property
-    def pages(self):
-        return int(ceil(self.total_count / float(self.per_page)))
-
-    @property
-    def has_prev(self):
-        return self.page > 1
-
-    @property
-    def has_next(self):
-        return self.page < self.pages
-
-    def iter_pages(self, left_edge=2, left_current=2,
-                   right_current=5, right_edge=2):
-        last = 0
-        for num in xrange(1, self.pages + 1):
-            if num <= left_edge or \
-               (num > self.page - left_current - 1 and \
-                num < self.page + right_current) or \
-               num > self.pages - right_edge:
-                if last + 1 != num:
-                    yield None
-                yield num
-                last = num
-
-PER_PAGE = 20
-
-
-@app.route('/obs/')
-def obslookup():
-    return render_template('obslookup.html', name="Telescope name")
+    print(pos)
+    sm = SM2017.SM(smfitspath+'/Halpha_map.fits', nu=freq)
+    return render_template("sm2017form.html", name="Enter RA, Dec, freq (MHz) for SM2017 calculation", sm=sm.get_halpha(pos))
 
 
 @app.route('/geocode', methods=["POST"])
@@ -159,9 +127,11 @@ def geocode():
     return showpulsars(lat, lng, 0)
 
 
-#@app.route('/pulsars/', defaults={'lat': 0, 'lng': 0, 'page': 0})
-@app.route("/pulsars") #/<float:lat>/<float:lng>/<int:page>")
-def showpulsars(lat, lng, page, methods=["GET", "POST"]):
+#@app.route("/pulsars")
+#def showpulsars(lat, lng, page, methods=["GET", "POST"]):
+@app.route("/pulsars/lat<float:lat>lng<float:lng>p<int:page>")
+def showpulsars(lat, lng, page, methods=["POST"]):
+    print(type(lat), type(lng))
     pulsar_names = []
     pulsar_rajd = []
     pulsar_decjd = []
@@ -180,6 +150,7 @@ def showpulsars(lat, lng, page, methods=["GET", "POST"]):
 	pagination = Pagination(page, PER_PAGE, count)
         return render_template("pulsars.html", pagination=pagination, n=num_pulsars, names=pulsar_names,
                 rajd=pulsar_rajd, decjd=pulsar_decjd, risesetlst=pulsar_risesetlst, lat=lat, lng=lng, name="Pulsars")
+
 
 def calc_rise_set(ra, dec, lat, lng, maxza):
     obsLat = lat                # latitude in degrees
@@ -226,9 +197,37 @@ def calc_rise_set(ra, dec, lat, lng, maxza):
     return [lstRiseStr, lstSetStr]
 
 
-@app.errorhandler(404)
-def page_not_found(error):
-    return render_template('page_not_found.html'), 404
+class Pagination(object):
+
+    def __init__(self, page, per_page, total_count):
+        self.page = page
+        self.per_page = per_page
+        self.total_count = total_count
+
+    @property
+    def pages(self):
+        return int(ceil(self.total_count / float(self.per_page)))
+
+    @property
+    def has_prev(self):
+        return self.page > 1
+
+    @property
+    def has_next(self):
+        return self.page < self.pages
+
+    def iter_pages(self, left_edge=2, left_current=2,
+                   right_current=5, right_edge=2):
+        last = 0
+        for num in xrange(1, self.pages + 1):
+            if num <= left_edge or \
+               (num > self.page - left_current - 1 and \
+                num < self.page + right_current) or \
+               num > self.pages - right_edge:
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
 
 
 if __name__ == "__main__":

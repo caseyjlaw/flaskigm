@@ -20,9 +20,9 @@
     {% endfor %}
     </table>
 
-    <p><a href="/pulsars?lat={{ lat }}&lng={{ lng }}&p=1">First</a> |
-    <a href="/pulsars?lat={{ lat }}&lng={{ lng }}&p={{ pagination.page - 1 }}">Prev</a> |
-    <a href="/pulsars?lat={{ lat }}&lng={{ lng }}&p={{ pagination.page + 1 }}">Next</a> |
-    <a href="/pulsars?lat={{ lat }}&lng={{ lng }}&p={{ pagination.pages - 1 }}">Last</a></p>
+    <p><a href="/pulsars/lat{{ lat }}lng{{ lng }}p0">First</a> |
+    <a href="/pulsars/lat{{ lat }}lng{{ lng }}p{{ pagination.page - 1 }}">Prev</a> |
+    <a href="/pulsars/lat{{ lat }}lng{{ lng }}p{{ pagination.page + 1 }}">Next</a> |
+    <a href="/pulsars/lat{{ lat }}lng{{ lng }}p{{ pagination.pages - 1 }}">Last</a></p>
 
 {% endblock %}

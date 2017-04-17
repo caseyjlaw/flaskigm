@@ -1,8 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
-  <h3>{{name}}</h3>
 
-<form action="/processcoord" method="POST">
+<h3>{{name}}</h3>
+
+<form action="/processname" method="POST">
   <input name="name">
   <input type=submit value=Submit>
 </form>
